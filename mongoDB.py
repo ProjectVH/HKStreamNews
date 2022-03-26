@@ -1,4 +1,5 @@
 import pymongo
+from pymongo.errors import BulkWriteError
 
 class MongoDB:
     def __init__(self, dbName, colName, MONGO_URL):
@@ -34,6 +35,18 @@ class NewsDB(MongoDB):
 
         return allNews
 
+    def findTop20News(self, collection):
+        """
+        Get 20 recent news from collection, descending order
+        :return: list of dictionary
+        """
+        try:
+            allNews = collection.find({}).sort("last_modified", -1).limit(20)
+        except:
+            allNews = []
+
+        return allNews
+
     def insertOneNews(self, collection, dict1):
         """
          Given a json(news record), insert it into news collection
@@ -52,8 +65,10 @@ class NewsDB(MongoDB):
         """
         from streamlit import success, error
         try:
-            collection.insert_many(lst)
+            collection.insert_many(lst, ordered = False)
             success("Success")
+        except BulkWriteError as e:
+            error("DuplicateKeyError,"+str(e))
         except Exception as e:
             error(e)
 

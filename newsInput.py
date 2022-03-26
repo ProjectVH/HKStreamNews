@@ -4,6 +4,7 @@ import json
 import os
 
 from mongoDB import NewsDB
+from newsCleaner import CleanNews
 
 screen = st.sidebar.selectbox(
     "View", ('Upload News', 'Submit News', 'Get News', "View News"), index=0)
@@ -55,7 +56,7 @@ elif screen == "Get News":
         # insert the list of dict(record) into mongodb
         train_data = df.to_dict("records")
         newsDB.insertManyNews(newsSentimentColl, train_data)
-        st.balloons()
+        #st.balloons()
 
         # write the txt file
         # with open("pos1.txt", "a", encoding='utf-8') as f:
@@ -74,6 +75,9 @@ elif screen == "Get News":
         "yahoo":"https://hk.finance.yahoo.com/news/rssindex",
         "mingpao": "https://news.mingpao.com/rss/pns/s00004.xml",
         "rthk": "http://rthk9.rthk.hk/rthk/news/rss/c_expressnews_cfinance.xml",
+        "icable": "https://rsshub.app/icable/all?option=brief",
+        # https://rsshub.app/now/news/rank?category=finance
+        "Now 新聞": "https://news.google.com/rss/search?q=site:https://news.now.com/home/finance+when:1d&hl=zh-HK&gl=HK&ceid=HK:zh-Hant"
     }
 
     newSource = st.radio("Generate 10 random from this source:", list(rssLinkDict.keys()))
@@ -81,27 +85,33 @@ elif screen == "Get News":
 
     NewsFeed = feedparser.parse(rssLink)
     entries = NewsFeed.entries
-    randomTenNews = choice(entries, size = 10)
+    # Draw 10 news from the feed and clean the text
+    try:
+        randomTenNews = [CleanNews(news.title, news.summary, news.link, newSource) for news in choice(entries, size=10)]
+    except AttributeError:
+        # Catch error of no summary/ title
+        randomTenNews = [CleanNews(news.title, "", news.link, newSource) for news in choice(entries, size=10)]
+
 
     with st.form("Data Categorization", clear_on_submit=True):
 
         classLabels = dict()
         newsTitles = []
 
-        for index, new in enumerate(randomTenNews):
+        for index, news in enumerate(randomTenNews):
             try:
-                st.subheader(new.title)
-                newsTitles.append(new.title)
+                st.subheader(news.title)
+                newsTitles.append(news.title)
             except Exception as e:
                 print(e)
 
             try:
-                st.write(new.summary)
+                st.write(news.summary)
             except Exception as e:
                 print(e)
 
             try:
-                st.write(new.link)
+                st.write(news.link)
             except Exception as e:
                 print(e)
             # use session to store the radio values
@@ -115,6 +125,6 @@ elif screen == "View News":
     newsSentimentDB = NewsDB('hkFinanceDB', 'newsSentiment', os.environ["MONGO_URL"])
     newsSentimentColl = newsSentimentDB.connectDB()
 
-    allNews = newsSentimentDB.findAllNews(newsSentimentColl)
-    df = pd.DataFrame(allNews, columns = ["title", "class_label"])
+    allNews = newsSentimentDB.findTop20News(newsSentimentColl)
+    df = pd.DataFrame(allNews, columns = ["title", "class_label", "last_modified"])
     st.table(df)
