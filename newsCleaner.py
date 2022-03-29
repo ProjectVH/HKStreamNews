@@ -2,8 +2,6 @@ from bs4 import BeautifulSoup
 
 class CleanNews():
 
-    googleNews = ["Now 新聞"]
-
     def __init__(self, title, summary, link, source):
         self.title = title
         self.summary = summary
@@ -25,8 +23,9 @@ class CleanNews():
         """
         Clean unnecessary source indication from Google News feed
         """
-        if self.source in self.googleNews:
-            self.title = self.title.replace(f" - {self.source}", "")
+        if "(fetch from google)" in self.source:
+            tmp = self.source.replace("(fetch from google)", "")
+            self.title = self.title.replace(f" - {tmp}", "")
 
 
 

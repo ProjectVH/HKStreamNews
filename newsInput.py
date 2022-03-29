@@ -7,7 +7,7 @@ from mongoDB import NewsDB
 from newsCleaner import CleanNews
 
 screen = st.sidebar.selectbox(
-    "View", ('Upload News', 'Submit News', 'Get News', "View News"), index=0)
+    "View", ('Upload News', 'Submit News', 'Get News', "View News", "Download News"), index=0)
 st.title(screen)
 
 newsDB = NewsDB('hkFinanceDB', 'news', os.environ["MONGO_URL"])
@@ -77,7 +77,7 @@ elif screen == "Get News":
         "rthk": "http://rthk9.rthk.hk/rthk/news/rss/c_expressnews_cfinance.xml",
         "icable": "https://rsshub.app/icable/all?option=brief",
         # https://rsshub.app/now/news/rank?category=finance
-        "Now 新聞": "https://news.google.com/rss/search?q=site:https://news.now.com/home/finance+when:1d&hl=zh-HK&gl=HK&ceid=HK:zh-Hant"
+        "Now 新聞(fetch from google)": "https://news.google.com/rss/search?q=site%3Ahttps%3A%2F%2Fnews.now.com%2Fhome%2Ffinance%20when%3A7d&hl=zh-HK&gl=HK&ceid=HK%3Azh-Hant"
     }
 
     newSource = st.radio("Generate 10 random from this source:", list(rssLinkDict.keys()))
@@ -128,3 +128,34 @@ elif screen == "View News":
     allNews = newsSentimentDB.findTop20News(newsSentimentColl)
     df = pd.DataFrame(allNews, columns = ["title", "class_label", "last_modified"])
     st.table(df)
+
+elif screen == "Download News":
+    newsSentimentDB = NewsDB('hkFinanceDB', 'newsSentiment', os.environ["MONGO_URL"])
+    newsSentimentColl = newsSentimentDB.connectDB()
+
+    allNews = newsSentimentDB.findAllNews(newsSentimentColl)
+    df = pd.DataFrame(allNews)
+
+    @st.cache
+    def df2csv(df):
+        return df.to_csv(index = False).encode("utf-8")
+
+    @st.cache
+    def df2json(df):
+        return str({"batch":df.to_dict("records")}).encode("utf-8")
+
+    csv = df2csv(df)
+    json = df2json(df)
+
+    st.download_button(
+        label = "Download all training news as csv file",
+        data = csv,
+        file_name= "training-news.csv",
+        mime="text/csv"
+    )
+    st.download_button(
+        label = "Download all training news as json file",
+        data = json,
+        file_name= "training-news.json",
+        mime="application/json"
+    )

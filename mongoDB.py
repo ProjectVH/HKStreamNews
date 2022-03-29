@@ -26,7 +26,7 @@ class NewsDB(MongoDB):
     def findAllNews(self, collection):
         """
         Get all the news from collection
-        :return: list of dictionary
+        :return: iterator of dictionary
         """
         try:
             allNews = collection.find({})
@@ -38,7 +38,7 @@ class NewsDB(MongoDB):
     def findTop20News(self, collection):
         """
         Get 20 recent news from collection, descending order
-        :return: list of dictionary
+        :return: iterator of dictionary
         """
         try:
             allNews = collection.find({}).sort("last_modified", -1).limit(20)
@@ -68,7 +68,8 @@ class NewsDB(MongoDB):
             collection.insert_many(lst, ordered = False)
             success("Success")
         except BulkWriteError as e:
-            error("DuplicateKeyError,"+str(e))
+            error("You have submitted duplicate news, and all other news are successfully submitted.")
+            error(str(e))
         except Exception as e:
             error(e)
 
