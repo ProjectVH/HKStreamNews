@@ -121,9 +121,13 @@ elif screen == "Get News":
 
 elif screen == "View News":
 
-    # get all training data for sentiment analysis
+    # get training data for sentiment analysis
     newsSentimentDB = NewsDB('hkFinanceDB', 'newsSentiment', os.environ["MONGO_URL"])
     newsSentimentColl = newsSentimentDB.connectDB()
+    # get count of +ve/ -ve news
+    countDict = newsSentimentDB.getNewsCount(newsSentimentColl)
+    for col, label, val in zip(st.columns(3), countDict.keys(), countDict.values()):
+        col.metric(label.capitalize(), val)
 
     allNews = newsSentimentDB.findTop20News(newsSentimentColl)
     df = pd.DataFrame(allNews, columns = ["title", "class_label", "last_modified"])

@@ -1,5 +1,6 @@
 import pymongo
 from pymongo.errors import BulkWriteError
+from streamlit import success, error
 
 class MongoDB:
     def __init__(self, dbName, colName, MONGO_URL):
@@ -63,7 +64,6 @@ class NewsDB(MongoDB):
         """
          Given a list of json(news record), insert all of them into news collection
         """
-        from streamlit import success, error
         try:
             collection.insert_many(lst, ordered = False)
             success("Success")
@@ -73,7 +73,23 @@ class NewsDB(MongoDB):
         except Exception as e:
             error(e)
 
+    def getNewsCount(self, collection):
+        """
+        Get # of positive/ negative/ neutral news in the db
+        :return: dict
+        """
+        result = {}
+        try:
+            count_dict_lst = collection.aggregate([{
+                "$group":{"_id": "$class_label", "count": {"$sum":1}}
+            }])
+            # count_dict["_id"] => class label
+            result = {count_dict["_id"]: count_dict["count"] for count_dict in count_dict_lst}
 
+        except Exception as e:
+            error(e)
+
+        return result
 
 
 
