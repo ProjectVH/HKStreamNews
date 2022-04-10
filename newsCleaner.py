@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import re
 
 class CleanNews():
 
@@ -14,6 +15,8 @@ class CleanNews():
         """
         remove html element in the news title and summary
         """
+        # remove xml encoding
+        self.summary = re.sub(r"&lt;.*&gt;", "", self.summary)
         soup_title = BeautifulSoup(self.title, 'html.parser')
         soup_summary = BeautifulSoup(self.summary, 'html.parser')
         self.title = soup_title.get_text()

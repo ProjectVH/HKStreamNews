@@ -77,7 +77,8 @@ elif screen == "Get News":
         "rthk": "http://rthk9.rthk.hk/rthk/news/rss/c_expressnews_cfinance.xml",
         "icable": "https://rsshub.app/icable/all?option=brief",
         # https://rsshub.app/now/news/rank?category=finance
-        "Now 新聞(fetch from google)": "https://news.google.com/rss/search?q=site%3Ahttps%3A%2F%2Fnews.now.com%2Fhome%2Ffinance%20when%3A7d&hl=zh-HK&gl=HK&ceid=HK%3Azh-Hant"
+        "Now 新聞(fetch from google)": "https://news.google.com/rss/search?q=site%3Ahttps%3A%2F%2Fnews.now.com%2Fhome%2Ffinance%20when%3A7d&hl=zh-HK&gl=HK&ceid=HK%3Azh-Hant",
+        "oncc": "https://rsshub.app/oncc/zh-hant/finance"
     }
 
     newSource = st.radio("Generate 10 random from this source:", list(rssLinkDict.keys()))
@@ -85,13 +86,20 @@ elif screen == "Get News":
 
     NewsFeed = feedparser.parse(rssLink)
     entries = NewsFeed.entries
-    # Draw 10 news from the feed and clean the text
-    try:
-        randomTenNews = [CleanNews(news.title, news.summary, news.link, newSource) for news in choice(entries, size=10)]
-    except AttributeError:
-        # Catch error of no summary/ title
-        randomTenNews = [CleanNews(news.title, "", news.link, newSource) for news in choice(entries, size=10)]
 
+    # Draw 10 news from the feed and clean the text
+    if len(entries) > 10:
+        try:
+            randomTenNews = [CleanNews(news.title, news.summary, news.link, newSource) for news in choice(entries, size=10)]
+        except AttributeError:
+            # Catch error of no summary/ title
+            randomTenNews = [CleanNews(news.title, "", news.link, newSource) for news in choice(entries, size=10)]
+    else:
+        try:
+            randomTenNews = [CleanNews(news.title, news.summary, news.link, newSource) for news in entries]
+        except AttributeError:
+            # Catch error of no summary/ title
+            randomTenNews = [CleanNews(news.title, "", news.link, newSource) for news in entries]
 
     with st.form("Data Categorization", clear_on_submit=True):
 
