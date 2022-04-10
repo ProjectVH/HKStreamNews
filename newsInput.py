@@ -7,7 +7,7 @@ from mongoDB import NewsDB
 from newsCleaner import CleanNews
 
 screen = st.sidebar.selectbox(
-    "View", ('Upload News', 'Submit News', 'Get News', "View News", "Download News"), index=0)
+    "View", ('Upload News', 'Submit News', 'Get News', "View News", "Download News"), index=2)
 st.title(screen)
 
 newsDB = NewsDB('hkFinanceDB', 'news', os.environ["MONGO_URL"])
