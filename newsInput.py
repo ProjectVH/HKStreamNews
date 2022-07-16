@@ -38,15 +38,20 @@ elif screen == "Get News":
     newsSentimentDB = NewsDB('hkFinanceDB', 'newsSentiment', os.environ["MONGO_URL"])
     newsSentimentColl = newsSentimentDB.connectDB()
 
-    # create a table when user submit their form and export them as a txt file(pos/neg) to store news title
+
     def exportNewsTitle():
+        """
+         create a table when user submit their form and store them in database
+        """
+
         # get class label from user session
         classLabels = {key: val for key, val in st.session_state.items() if "new" in key}
+        # sort the dict by newsNo(news1, news2, ...)
         sorted_key = sorted(classLabels, key=lambda index: int(index[4:]))
 
         df = pd.DataFrame({
-        "title": newsTitles,
-        "class_label": [classLabels[key] for key in sorted_key]
+            "title": newsTitles,
+            "class_label": [classLabels[key] for key in sorted_key]
         })
 
         # filter out the news without label
@@ -56,14 +61,7 @@ elif screen == "Get News":
         # insert the list of dict(record) into mongodb
         train_data = df.to_dict("records")
         newsDB.insertManyNews(newsSentimentColl, train_data)
-        #st.balloons()
 
-        # write the txt file
-        # with open("pos1.txt", "a", encoding='utf-8') as f:
-        #     f.writelines([title + "\n" for title in pos.values])
-        #
-        # with open("neg1.txt", "a", encoding='utf-8') as f:
-        #     f.writelines([title + "\n" for title in neg.values])
 
 
 
@@ -123,7 +121,7 @@ elif screen == "Get News":
             except Exception as e:
                 print(e)
             # use session to store the radio values
-            st.radio("Class:", ["none", "positive", "neutral", "negative"], key=f"news{index+1}")
+            st.radio("Class:", ["none", "very positive", "positive", "neutral", "negative", "very negative"], key=f"news{index+1}")
 
         submitted = st.form_submit_button("Submit", on_click=exportNewsTitle)
 
@@ -134,7 +132,7 @@ elif screen == "View News":
     newsSentimentColl = newsSentimentDB.connectDB()
     # get count of +ve/ -ve news
     countDict = newsSentimentDB.getNewsCount(newsSentimentColl)
-    for col, label, val in zip(st.columns(3), countDict.keys(), countDict.values()):
+    for col, label, val in zip(st.columns(5), countDict.keys(), countDict.values()):
         col.metric(label.capitalize(), val)
 
     allNews = newsSentimentDB.findTop20News(newsSentimentColl)

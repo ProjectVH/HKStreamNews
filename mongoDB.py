@@ -75,7 +75,7 @@ class NewsDB(MongoDB):
 
     def getNewsCount(self, collection):
         """
-        Get # of positive/ negative/ neutral news in the db
+        Get # of (very) positive/ (very) negative/ neutral news in the db
         :return: dict
         """
         result = {}
